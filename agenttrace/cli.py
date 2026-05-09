@@ -4,7 +4,11 @@ import typer
 from rich.console import Console
 from rich.table import Table
 from agenttrace.reports.markdown import generate_report_for_current_session
-
+from agenttrace.integrations.claude import (
+    claude_hooks_status,
+    setup_claude_hooks,
+    uninstall_claude_hooks,
+)
 from agenttrace.core.events import read_events, record_event
 from agenttrace.core.paths import (
     agenttrace_dir,
@@ -29,6 +33,10 @@ app = typer.Typer(
 
 event_app = typer.Typer(
     help="Record events in the current AgentTrace session.",
+)
+
+claude_app = typer.Typer(
+    help="Manage Claude Code integration.",
 )
 
 console = Console()
@@ -360,5 +368,62 @@ def report() -> None:
     console.print("[bold green]AgentTrace report created.[/bold green]")
     console.print(f"Path: [bold]{report_path}[/bold]")
     
+@claude_app.command("setup")
+def claude_setup() -> None:
+    """
+    Install AgentTrace hooks into Claude Code local settings.
+    """
+    try:
+        require_initialized()
+        settings_path, backup_path = setup_claude_hooks()
+    except RuntimeError as error:
+        console.print(f"[bold red]Error:[/bold red] {error}")
+        raise typer.Exit(code=1)
 
+    console.print("[bold green]Claude Code hooks installed.[/bold green]")
+    console.print(f"Settings: [bold]{settings_path}[/bold]")
+
+    if backup_path:
+        console.print(f"Backup: [bold]{backup_path}[/bold]")
+
+
+@claude_app.command("status")
+def claude_status() -> None:
+    """
+    Check whether AgentTrace hooks are installed in Claude Code settings.
+    """
+    try:
+        require_initialized()
+        settings_path, installed = claude_hooks_status()
+    except RuntimeError as error:
+        console.print(f"[bold red]Error:[/bold red] {error}")
+        raise typer.Exit(code=1)
+
+    console.print(f"Settings: [bold]{settings_path}[/bold]")
+
+    if installed:
+        console.print("[bold green]AgentTrace Claude hooks are installed.[/bold green]")
+    else:
+        console.print("[yellow]AgentTrace Claude hooks are not installed.[/yellow]")
+
+
+@claude_app.command("uninstall")
+def claude_uninstall() -> None:
+    """
+    Remove AgentTrace hooks from Claude Code local settings.
+    """
+    try:
+        require_initialized()
+        settings_path, backup_path = uninstall_claude_hooks()
+    except RuntimeError as error:
+        console.print(f"[bold red]Error:[/bold red] {error}")
+        raise typer.Exit(code=1)
+
+    console.print("[bold green]AgentTrace Claude hooks removed.[/bold green]")
+    console.print(f"Settings: [bold]{settings_path}[/bold]")
+
+    if backup_path:
+        console.print(f"Backup: [bold]{backup_path}[/bold]")
+        
 app.add_typer(event_app, name="event")
+app.add_typer(claude_app, name="claude")
