@@ -1,8 +1,9 @@
 from typing import Optional
-
+from agenttrace.risk.scorer import score_session
 import typer
 from rich.console import Console
 from rich.table import Table
+from agenttrace.reports.markdown import generate_report_for_current_session
 
 from agenttrace.core.events import read_events, record_event
 from agenttrace.core.paths import (
@@ -300,12 +301,64 @@ def snapshot() -> None:
     console.print(f"Files changed: {summary.files_changed_count}")
 
 
+@app.command("risk")
+def risk() -> None:
+    """
+    Score the current AgentTrace session risk.
+    """
+    try:
+        require_initialized()
+        events = read_events()
+
+        try:
+            git_summary = get_git_summary()
+        except GitError:
+            git_summary = None
+
+        result = score_session(events=events, git_summary=git_summary)
+
+    except RuntimeError as error:
+        console.print(f"[bold red]Error:[/bold red] {error}")
+        raise typer.Exit(code=1)
+
+    risk_style = {
+        "unknown": "dim",
+        "low": "green",
+        "medium": "yellow",
+        "high": "red",
+    }.get(result.level, "white")
+
+    console.print(f"[bold]Session risk:[/bold] [{risk_style}]{result.level.upper()}[/{risk_style}]")
+
+    if result.reasons:
+        console.print()
+        console.print("[bold]Reasons[/bold]")
+
+        for reason in result.reasons:
+            console.print(f"- {reason}")
+
+    if result.matched_rules:
+        console.print()
+        console.print("[bold]Matched rules[/bold]")
+
+        for rule in result.matched_rules:
+            console.print(f"- {rule}")
+
+
 @app.command()
 def report() -> None:
     """
-    Generate an AgentTrace report.
+    Generate an AgentTrace Markdown report.
     """
-    console.print("[yellow]Phase 5 command placeholder:[/yellow] report")
+    try:
+        require_initialized()
+        report_path = generate_report_for_current_session()
+    except RuntimeError as error:
+        console.print(f"[bold red]Error:[/bold red] {error}")
+        raise typer.Exit(code=1)
 
+    console.print("[bold green]AgentTrace report created.[/bold green]")
+    console.print(f"Path: [bold]{report_path}[/bold]")
+    
 
 app.add_typer(event_app, name="event")

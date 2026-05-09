@@ -10,6 +10,7 @@ from agenttrace.core.paths import (
     sessions_dir,
 )
 from agenttrace.core.session import Session
+from agenttrace.risk.rules import ensure_rules_file
 
 
 def write_json(path: Path, data: dict[str, Any]) -> None:
@@ -31,6 +32,7 @@ def is_initialized() -> bool:
 def init_project() -> None:
     agenttrace_dir().mkdir(exist_ok=True)
     sessions_dir().mkdir(exist_ok=True)
+    ensure_rules_file()
 
 
 def require_initialized() -> None:

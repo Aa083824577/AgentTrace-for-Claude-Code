@@ -19,6 +19,10 @@ def current_session_file() -> Path:
     return agenttrace_dir() / "current_session.json"
 
 
+def rules_file() -> Path:
+    return agenttrace_dir() / "rules.yaml"
+
+
 def session_dir(session_id: str) -> Path:
     return sessions_dir() / session_id
 

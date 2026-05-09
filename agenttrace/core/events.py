@@ -97,3 +97,23 @@ def read_events() -> list[Event]:
             events.append(Event(**data))
 
     return events
+
+def read_events_for_session(session_id: str) -> list[Event]:
+    path = session_events_file(session_id)
+
+    if not path.exists():
+        return []
+
+    events: list[Event] = []
+
+    with path.open("r", encoding="utf-8") as file:
+        for line in file:
+            line = line.strip()
+
+            if not line:
+                continue
+
+            data = json.loads(line)
+            events.append(Event(**data))
+
+    return events
