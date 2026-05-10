@@ -1,80 +1,73 @@
-# AgentTrace
+# AgentTrace for Claude Code
 
-> **See exactly what Claude Code did. Before you trust it.**
+**You let Claude Code run. Now what did it actually do?**
 
-AgentTrace is an open-source CLI tool that records every command run, every file touched, and every Git change made during a Claude Code session — then gives you a clean, local report to review before merging anything.
+AgentTrace is an open-source CLI tool that sits alongside Claude Code and records everything that happens during a coding session — every command run, every file touched, every Git change made — stored locally as plain files inside your project, so you can review it all before trusting or merging anything.
 
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-3776AB?style=flat&logo=python&logoColor=white)](https://www.python.org/)
-[![Typer](https://img.shields.io/badge/CLI-Typer-009688?style=flat)](https://typer.tiangolo.com/)
-[![Pydantic](https://img.shields.io/badge/models-Pydantic-E92063?style=flat)](https://docs.pydantic.dev/)
-[![Rich](https://img.shields.io/badge/terminal-Rich-7B2FBE?style=flat)](https://rich.readthedocs.io/)
-[![License: MIT](https://img.shields.io/badge/license-MIT-22c55e?style=flat)](LICENSE)
+[![Python 3.11+](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
+[![Typer](https://img.shields.io/badge/CLI-Typer-009688?style=flat-square)](https://typer.tiangolo.com/)
+[![Pydantic v2](https://img.shields.io/badge/Models-Pydantic_v2-E92063?style=flat-square)](https://docs.pydantic.dev/)
+[![Rich](https://img.shields.io/badge/Terminal-Rich-7B2FBE?style=flat-square)](https://rich.readthedocs.io/)
+[![pytest](https://img.shields.io/badge/Tests-pytest-0A9EDC?style=flat-square)](https://pytest.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-22c55e?style=flat-square)](LICENSE)
+[![Status](https://img.shields.io/badge/Status-Active_Development-orange?style=flat-square)]()
 
 ---
 
 ## The Problem
 
-You give Claude Code a task. It runs for a few minutes. It touches files, runs commands, rewrites things. Then it's done.
+You give Claude Code a task. It runs for a few minutes — editing files, running commands, touching configuration, rewriting logic. Then it stops.
 
-Now you're asking:
+And you're left asking:
 
 - What commands did it actually run?
-- Did it touch `.env`, secrets, or any auth logic?
-- How large is this diff really?
+- Did it touch `.env`, secrets, or any auth code?
 - Did it modify my tests?
-- Can I safely merge this?
+- How big is this diff really?
+- Is this safe to merge?
 
-Without a record, you're manually digging through `git diff` and shell history hoping you catch everything. That's not a great way to trust AI-generated code.
+Without a record, you're manually piecing together `git diff` and shell history every single time. That is not a good trust model for AI-generated code.
 
-AgentTrace solves this by acting as a **black-box recorder** for your Claude Code sessions.
+**AgentTrace fixes this** by keeping a clean, local, append-only log of everything that happened during the session — so you can answer all those questions before you merge anything.
 
 ---
 
-## What It Does
+## What's Working Right Now
 
-AgentTrace sits alongside Claude Code and records everything into a clean local log inside your project. No cloud. No database. No background process.
+Phases 0 through 3 are complete.
 
-**Currently working:**
-
-- named coding sessions with start time and task description
-- append-only JSONL event log — commands, files, and free notes
-- Git tracking — branch, changed files, insertions, deletions
-- Git snapshots saved directly into the session folder
-- readable terminal output with Rich-powered tables
+```bash
+agenttrace init                                 # set up AgentTrace in any project
+agenttrace start "fix authentication bug"       # begin a named session
+agenttrace event command "npm test"             # record a command that ran
+agenttrace event file "src/auth/login.ts"       # record a file that was touched
+agenttrace event note "rewrote token refresh"   # attach a free-text note
+agenttrace events                               # list everything that happened
+agenttrace diff                                 # inspect git changes
+agenttrace snapshot                             # save git state mid-session
+agenttrace status                               # check the current session
+agenttrace version                              # show version
+```
 
 **Coming next:**
 
-- risk scoring for commands and file paths (Phase 4)
-- auto-generated Markdown session reports (Phase 5)
-- Claude Code hook integration — records everything automatically, no manual logging needed (Phases 6–7)
-- guard mode — blocks dangerous commands before they run (Phase 11)
-
----
-
-## Built With
-
-AgentTrace is built entirely in Python using tools chosen for simplicity, readability, and zero unnecessary dependencies.
-
-| Tool | Role |
-|------|------|
-| [Python 3.11+](https://www.python.org/) | Core language |
-| [Typer](https://typer.tiangolo.com/) | CLI framework — clean command definitions with type hints |
-| [Rich](https://rich.readthedocs.io/) | Terminal output — tables, panels, colored status |
-| [Pydantic v2](https://docs.pydantic.dev/) | Data models — Session, Event, GitSummary |
-| [PyYAML](https://pyyaml.org/) | Risk rules config — `.agenttrace/rules.yaml` |
-| [pytest](https://pytest.org/) | Testing — isolated filesystems, CLI runner |
-| Git (subprocess) | Reading branch, diff, status, numstat |
-| JSON + JSONL | Storage — no database, plain readable files |
-
-No database. No web framework. No cloud SDK. Every dependency earns its place.
+| Command | Phase | What it does |
+|---------|:-----:|--------------|
+| `agenttrace risk` | 4 | Score commands and files as low / medium / high risk |
+| `agenttrace report` | 5 | Auto-generate a full Markdown session report |
+| `agenttrace claude setup` | 6 | Install Claude Code hooks — automatic recording, no manual logging |
+| `agenttrace hook ...` | 7 | Handle hook events from Claude Code in real time |
+| Guard mode | 11 | Block dangerous commands before they run |
 
 ---
 
 ## Install
 
+**Requirements:** Python 3.11+, Git
+
 ```bash
-git clone https://github.com/YOUR_USERNAME/agenttrace.git
-cd agenttrace
+git clone https://github.com/Aa083824577/AgentTrace-for-Claude-Code.git
+cd AgentTrace-for-Claude-Code
 
 # macOS / Linux
 python3 -m venv .venv && source .venv/bin/activate
@@ -88,46 +81,46 @@ agenttrace --help
 
 ---
 
-## Quickstart
+## A Full Session, Step by Step
 
 ```bash
-# Initialize AgentTrace inside your project
+# Once per project
 agenttrace init
 
-# Start a named session
+# Before you open Claude Code
 agenttrace start "fix authentication bug"
 
-# Log what Claude Code did
+# After Claude Code finishes — record what it did
 agenttrace event command "npm test"
 agenttrace event command "npm run lint"
 agenttrace event file "src/auth/login.ts"
 agenttrace event file "src/auth/session.ts"
 agenttrace event note "Claude rewrote the token refresh logic"
 
-# Save git state
+# Capture the git state at this point
 agenttrace snapshot
 
-# Review the session
+# Review everything
 agenttrace events
 agenttrace diff
-agenttrace status
 ```
 
-Once Claude Code hook integration ships (Phase 7), the logging steps above become fully automatic:
+Once Phase 7 ships, the manual recording steps become fully automatic:
 
 ```bash
 agenttrace init
-agenttrace claude setup
+agenttrace claude setup          # install Claude Code hooks once
 agenttrace start "fix auth bug"
-claude                       ← Claude Code runs, AgentTrace records everything
-agenttrace report            ← Markdown report of the full session
+claude                           # Claude Code works — AgentTrace records automatically
+agenttrace report                # full Markdown report of everything that happened
 ```
 
 ---
 
-## Example Output
+## What the Output Looks Like
 
 **`agenttrace status`**
+
 ```
 AgentTrace Status
 
@@ -139,6 +132,7 @@ AgentTrace Status
 ```
 
 **`agenttrace events`**
+
 ```
 AgentTrace Events
 
@@ -149,10 +143,11 @@ AgentTrace Events
 ```
 
 **`agenttrace diff`**
+
 ```
 Branch: main
 
-  Git Changes
+  Changed Files
     src/auth/login.ts
     src/auth/session.ts
     tests/auth.test.ts
@@ -163,23 +158,38 @@ Branch: main
     Deletions:      14
 ```
 
+**`agenttrace risk` — coming in Phase 4**
+
+```
+Session Risk: MEDIUM
+
+  Reasons
+    · Modified authentication file: src/auth/login.ts
+    · Modified authentication file: src/auth/session.ts
+    · Test file modified: tests/auth.test.ts
+    · No high-risk shell commands detected
+
+  Recommendation
+    Review carefully before merging.
+```
+
 ---
 
 ## How Data Is Stored
 
-Everything lives inside `.agenttrace/` in your project. Readable without any special tools.
+Everything is local. No cloud. No server. No background process. Just files inside your project.
 
 ```
 .agenttrace/
-  current_session.json        ← pointer to the active session
+  current_session.json          ← points to the active session
   sessions/
     2026-05-08-155726/
-      session.json            ← session metadata
-      events.jsonl            ← append-only event log (one JSON per line)
-      snapshot.json           ← git state captured mid-session
+      session.json              ← session metadata (task, status, timestamps)
+      events.jsonl              ← append-only event log, one JSON object per line
+      snapshot.json             ← git state captured at snapshot time
 ```
 
-Each event is a single line of JSON:
+Events are plain JSONL — readable with `cat`, no tooling required:
 
 ```jsonl
 {"id":"evt_20260508_160122_a1b2","type":"command","time":"2026-05-08T16:01:22","message":"npm test","payload":{"command":"npm test"},"risk":"unknown"}
@@ -187,90 +197,116 @@ Each event is a single line of JSON:
 {"id":"evt_20260508_160305_e5f6","type":"note","time":"2026-05-08T16:03:15","message":"Claude rewrote the token refresh logic","payload":{},"risk":"unknown"}
 ```
 
-JSONL was chosen because it is append-only, inspectable with `cat`, and requires no parser to understand.
+JSONL was chosen deliberately: append-only, human-readable, no parser needed, no database to manage.
+
+---
+
+## Built With
+
+Every dependency earns its place. Nothing included for convenience.
+
+| Tool | Role |
+|------|------|
+| **[Python 3.11+](https://www.python.org/)** | Core language — type hints, modern stdlib, match statements |
+| **[Typer](https://typer.tiangolo.com/)** | CLI framework — commands defined from Python type annotations, built on Click |
+| **[Rich](https://rich.readthedocs.io/)** | Terminal output — tables, panels, colored text without fighting ANSI codes |
+| **[Pydantic v2](https://docs.pydantic.dev/)** | Data models — `Session`, `Event`, `GitSummary` with validation and JSON serialization |
+| **[PyYAML](https://pyyaml.org/)** | Risk rules config — `.agenttrace/rules.yaml` for per-project customization (Phase 4) |
+| **[pytest](https://pytest.org/)** | Tests — `CliRunner` for CLI testing, isolated temp filesystems per test |
+| **subprocess + Git** | Git integration — `git diff --numstat`, `git status --porcelain`, `git rev-parse` |
+| **JSON + JSONL** | Storage — no ORM, no migrations, no database engine, just files |
+| **[Hatchling](https://hatch.pypa.io/)** | Build backend — modern Python packaging via `pyproject.toml` |
+
+No database. No web framework. No cloud SDK.
 
 ---
 
 ## Architecture
 
-The codebase is structured so the CLI stays thin and each module has one clear job.
+The CLI stays thin. Each module has one job. Each phase adds one folder.
 
 ```
 agenttrace/
-  cli.py              ← commands only, no business logic
+  cli.py              ← command definitions only, no business logic
 
   core/
-    paths.py          ← every file path defined in one place
+    paths.py          ← every file path in one place — nothing hardcoded elsewhere
     session.py        ← Session Pydantic model
     storage.py        ← JSON read/write, init, current session helpers
-    events.py         ← Event Pydantic model, JSONL append + read
+    events.py         ← Event Pydantic model, JSONL append and read
 
   git/
-    tracker.py        ← git branch, status, diff --numstat, snapshot
+    tracker.py        ← branch, status, diff --numstat, snapshot
 
-  risk/               ← Phase 4: rules.yaml + command/file scorer
-  reports/            ← Phase 5: Markdown report builder
-  integrations/       ← Phase 6: .claude/settings.local.json setup
-  hooks/              ← Phase 7: stdin hook handler for Claude Code
+  risk/               ← Phase 4: load rules.yaml, score commands and file paths
+  reports/            ← Phase 5: build and save report.md
+  integrations/       ← Phase 6: install and manage Claude Code hooks
+  hooks/              ← Phase 7: read hook JSON from stdin, record events automatically
 ```
-
-Each phase adds one module. Nothing gets rewritten.
 
 ---
 
 ## Roadmap
 
-| Phase | Status | What It Adds |
-|-------|--------|--------------|
-| 0 | ✅ Done | Python project setup, `--help`, `version` |
-| 1 | ✅ Done | `init`, `start`, `status` — session tracking |
-| 2 | ✅ Done | `event command/file/note`, `events` — event logging |
-| 3 | ✅ Done | `diff`, `snapshot` — Git tracking |
-| 4 | 🔨 Next | `risk` — score commands and file paths |
-| 5 | Planned | `report` — auto-generate `report.md` |
-| 6 | Planned | `claude setup/status/uninstall` — hook installation |
-| 7 | Planned | `hook pre-tool/post-tool/stop` — automatic recording |
-| 8 | Planned | Rich tables, colored risk badges, polished output |
-| 11 | Planned | Guard mode — block dangerous actions in real time |
+| Phase | Status | Description |
+|-------|:------:|-------------|
+| 0 | ✅ | Python project setup — Typer, Rich, Pydantic, pytest, pyproject.toml |
+| 1 | ✅ | Session tracking — `init`, `start`, `status` |
+| 2 | ✅ | Event logging — `event command / file / note`, `events` |
+| 3 | ✅ | Git tracking — `diff`, `snapshot` |
+| 4 | 🔨 | Risk engine — score every command and file path |
+| 5 | 📋 | Report generator — auto-generate `report.md` |
+| 6 | 📋 | Claude Code integration — `claude setup / status / uninstall` |
+| 7 | 📋 | Hook handlers — fully automatic recording via Claude Code hooks |
+| 8 | 📋 | Terminal UI polish — Rich tables, colored risk badges |
+| 11 | 📋 | Guard mode — block dangerous actions before they run |
 
 ---
 
 ## Design Principles
 
-**Local-first.** Every file stays inside your project. Nothing is sent anywhere.
+**Local-first.** All data stays inside your project. Nothing ever leaves your machine.
 
-**No database.** JSON and JSONL files only. Open them with any text editor or `cat`.
+**No database.** JSON and JSONL files only. Read anything with `cat` or a text editor — no tooling needed.
 
-**No background process.** AgentTrace runs only when you call it. It never watches passively.
+**No background process.** AgentTrace runs only when you call it. It never watches, polls, or runs silently.
 
 **Non-destructive.** AgentTrace never modifies your code. It only observes and records.
 
-**One phase at a time.** Each phase builds cleanly on the last. No skipping, no rewrites.
+**One phase at a time.** Each phase builds cleanly on the previous one. No skipping. No full rewrites.
 
 ---
 
 ## Development
 
 ```bash
-pytest                    # run the test suite
-agenttrace --help         # verify the CLI works
-pip install -e ".[dev]"   # reinstall after changes
+pytest                       # run the full test suite
+agenttrace --help            # verify the CLI
+pip install -e ".[dev]"      # reinstall after changes
 ```
 
-Tests use `CliRunner` from Typer for CLI testing and isolated temporary filesystems so nothing touches your real project.
+Tests use Typer's `CliRunner` and temporary isolated filesystems — no test ever touches your real project or real Git repo.
 
 ---
 
 ## Contributing
 
-The project is in active early development. Good places to start:
+Active early development — contributions welcome.
 
-- write more tests (events, storage, git tracker)
-- improve Git diff parsing edge cases
-- help design the risk scoring rules for Phase 4
-- suggest what a useful `report.md` should look like
+Good places to start:
+
+- write more tests for events, storage, and the Git tracker
+- help design the risk scoring rules for Phase 4 — what counts as high risk?
+- suggest what a useful `report.md` should actually look like
+- improve Git diff parsing for edge cases
 
 Run `pytest` before opening a PR.
+
+---
+
+## Author
+
+Built by **Brahim Boughezroun** — [GitHub](https://github.com/Aa083824577)
 
 ---
 
