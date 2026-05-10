@@ -41,3 +41,11 @@ def session_report_file(session_id: str) -> Path:
 
 def session_snapshot_file(session_id: str) -> Path:
     return session_dir(session_id) / "snapshot.json"
+
+
+def session_raw_hooks_dir(session_id: str) -> Path:
+    return session_dir(session_id) / "raw-hooks"
+
+
+def session_raw_hook_file(session_id: str, filename: str) -> Path:
+    return session_raw_hooks_dir(session_id) / filename

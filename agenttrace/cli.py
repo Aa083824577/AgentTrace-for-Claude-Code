@@ -3,6 +3,12 @@ from agenttrace.risk.scorer import score_session
 import typer
 from rich.console import Console
 from rich.table import Table
+from agenttrace.hooks.handler import (
+    HookPayloadError,
+    handle_post_tool,
+    handle_pre_tool,
+    handle_stop,
+)
 from agenttrace.reports.markdown import generate_report_for_current_session
 from agenttrace.integrations.claude import (
     claude_hooks_status,
@@ -33,6 +39,9 @@ app = typer.Typer(
 
 event_app = typer.Typer(
     help="Record events in the current AgentTrace session.",
+)
+hook_app = typer.Typer(
+    help="Handle Claude Code hook events.",
 )
 
 claude_app = typer.Typer(
@@ -425,5 +434,54 @@ def claude_uninstall() -> None:
     if backup_path:
         console.print(f"Backup: [bold]{backup_path}[/bold]")
         
+@hook_app.command("pre-tool")
+def hook_pre_tool() -> None:
+    """
+    Handle Claude Code PreToolUse hook events.
+    """
+    try:
+        require_initialized()
+        raw_path = handle_pre_tool()
+    except (RuntimeError, HookPayloadError) as error:
+        console.print(f"[bold red]Error:[/bold red] {error}")
+        raise typer.Exit(code=1)
+
+    console.print("[bold green]Claude pre-tool hook recorded.[/bold green]")
+    console.print(f"Raw payload: [bold]{raw_path}[/bold]")
+
+
+@hook_app.command("post-tool")
+def hook_post_tool() -> None:
+    """
+    Handle Claude Code PostToolUse hook events.
+    """
+    try:
+        require_initialized()
+        raw_path = handle_post_tool()
+    except (RuntimeError, HookPayloadError) as error:
+        console.print(f"[bold red]Error:[/bold red] {error}")
+        raise typer.Exit(code=1)
+
+    console.print("[bold green]Claude post-tool hook recorded.[/bold green]")
+    console.print(f"Raw payload: [bold]{raw_path}[/bold]")
+
+
+@hook_app.command("stop")
+def hook_stop() -> None:
+    """
+    Handle Claude Code Stop hook events.
+    """
+    try:
+        require_initialized()
+        raw_path = handle_stop()
+    except (RuntimeError, HookPayloadError) as error:
+        console.print(f"[bold red]Error:[/bold red] {error}")
+        raise typer.Exit(code=1)
+
+    console.print("[bold green]Claude stop hook recorded.[/bold green]")
+    console.print(f"Raw payload: [bold]{raw_path}[/bold]")
+    console.print("[bold green]AgentTrace report generated.[/bold green]")
+    
 app.add_typer(event_app, name="event")
 app.add_typer(claude_app, name="claude")
+app.add_typer(hook_app, name="hook")
