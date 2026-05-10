@@ -40,25 +40,24 @@ def create_event(
     )
 
 
-def get_current_session_events_file():
+def get_current_session_events_file(require_running: bool = True):
     session = get_current_session()
 
     if not session:
         raise RuntimeError('No active AgentTrace session found. Run: agenttrace start "your task"')
 
-    if session.status != "running":
+    if require_running and session.status != "running":
         raise RuntimeError("The current AgentTrace session is not running.")
 
     return session_events_file(session.id)
 
 
 def append_event(event: Event) -> None:
-    path = get_current_session_events_file()
+    path = get_current_session_events_file(require_running=True)
     path.parent.mkdir(parents=True, exist_ok=True)
 
     with path.open("a", encoding="utf-8") as file:
         file.write(event.model_dump_json() + "\n")
-
 
 def record_event(
     event_type: EventType,
@@ -79,7 +78,7 @@ def record_event(
 
 
 def read_events() -> list[Event]:
-    path = get_current_session_events_file()
+    path = get_current_session_events_file(require_running=False)
 
     if not path.exists():
         return []

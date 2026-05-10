@@ -49,7 +49,7 @@ claude_app = typer.Typer(
 )
 
 console = Console()
-
+error_console = Console(stderr=True)
 
 @app.callback()
 def main() -> None:
@@ -91,7 +91,7 @@ def start(task: Optional[str] = typer.Argument(None)) -> None:
     try:
         require_initialized()
     except RuntimeError as error:
-        console.print(f"[bold red]Error:[/bold red] {error}")
+        error_console.print(f"[bold red]Error:[/bold red] {error}")
         raise typer.Exit(code=1)
 
     existing_session = get_current_session()
@@ -120,7 +120,7 @@ def status() -> None:
     try:
         require_initialized()
     except RuntimeError as error:
-        console.print(f"[bold red]Error:[/bold red] {error}")
+        error_console.print(f"[bold red]Error:[/bold red] {error}")
         raise typer.Exit(code=1)
 
     session = get_current_session()
@@ -156,7 +156,7 @@ def event_command(command: str = typer.Argument(...)) -> None:
             payload={"command": command},
         )
     except RuntimeError as error:
-        console.print(f"[bold red]Error:[/bold red] {error}")
+        error_console.print(f"[bold red]Error:[/bold red] {error}")
         raise typer.Exit(code=1)
 
     console.print("[bold green]Command event recorded.[/bold green]")
@@ -177,7 +177,7 @@ def event_file(path: str = typer.Argument(...)) -> None:
             payload={"path": path},
         )
     except RuntimeError as error:
-        console.print(f"[bold red]Error:[/bold red] {error}")
+        error_console.print(f"[bold red]Error:[/bold red] {error}")
         raise typer.Exit(code=1)
 
     console.print("[bold green]File event recorded.[/bold green]")
@@ -198,7 +198,7 @@ def event_note(message: str = typer.Argument(...)) -> None:
             payload={},
         )
     except RuntimeError as error:
-        console.print(f"[bold red]Error:[/bold red] {error}")
+        error_console.print(f"[bold red]Error:[/bold red] {error}")
         raise typer.Exit(code=1)
 
     console.print("[bold green]Note event recorded.[/bold green]")
@@ -215,7 +215,7 @@ def list_events() -> None:
         require_initialized()
         events = read_events()
     except RuntimeError as error:
-        console.print(f"[bold red]Error:[/bold red] {error}")
+        error_console.print(f"[bold red]Error:[/bold red] {error}")
         raise typer.Exit(code=1)
 
     if not events:
@@ -249,7 +249,7 @@ def diff() -> None:
         require_initialized()
         summary = get_git_summary()
     except RuntimeError as error:
-        console.print(f"[bold red]Error:[/bold red] {error}")
+        error_console.print(f"[bold red]Error:[/bold red] {error}")
         raise typer.Exit(code=1)
     except GitError as error:
         console.print(f"[bold red]Git error:[/bold red] {error}")
@@ -306,7 +306,7 @@ def snapshot() -> None:
         write_json(snapshot_path, summary.model_dump())
 
     except RuntimeError as error:
-        console.print(f"[bold red]Error:[/bold red] {error}")
+        error_console.print(f"[bold red]Error:[/bold red] {error}")
         raise typer.Exit(code=1)
     except GitError as error:
         console.print(f"[bold red]Git error:[/bold red] {error}")
@@ -335,7 +335,7 @@ def risk() -> None:
         result = score_session(events=events, git_summary=git_summary)
 
     except RuntimeError as error:
-        console.print(f"[bold red]Error:[/bold red] {error}")
+        error_console.print(f"[bold red]Error:[/bold red] {error}")
         raise typer.Exit(code=1)
 
     risk_style = {
@@ -371,7 +371,7 @@ def report() -> None:
         require_initialized()
         report_path = generate_report_for_current_session()
     except RuntimeError as error:
-        console.print(f"[bold red]Error:[/bold red] {error}")
+        error_console.print(f"[bold red]Error:[/bold red] {error}")
         raise typer.Exit(code=1)
 
     console.print("[bold green]AgentTrace report created.[/bold green]")
@@ -386,7 +386,7 @@ def claude_setup() -> None:
         require_initialized()
         settings_path, backup_path = setup_claude_hooks()
     except RuntimeError as error:
-        console.print(f"[bold red]Error:[/bold red] {error}")
+        error_console.print(f"[bold red]Error:[/bold red] {error}")
         raise typer.Exit(code=1)
 
     console.print("[bold green]Claude Code hooks installed.[/bold green]")
@@ -405,7 +405,7 @@ def claude_status() -> None:
         require_initialized()
         settings_path, installed = claude_hooks_status()
     except RuntimeError as error:
-        console.print(f"[bold red]Error:[/bold red] {error}")
+        error_console.print(f"[bold red]Error:[/bold red] {error}")
         raise typer.Exit(code=1)
 
     console.print(f"Settings: [bold]{settings_path}[/bold]")
@@ -425,7 +425,7 @@ def claude_uninstall() -> None:
         require_initialized()
         settings_path, backup_path = uninstall_claude_hooks()
     except RuntimeError as error:
-        console.print(f"[bold red]Error:[/bold red] {error}")
+        error_console.print(f"[bold red]Error:[/bold red] {error}")
         raise typer.Exit(code=1)
 
     console.print("[bold green]AgentTrace Claude hooks removed.[/bold green]")
@@ -443,7 +443,7 @@ def hook_pre_tool() -> None:
         require_initialized()
         raw_path = handle_pre_tool()
     except (RuntimeError, HookPayloadError) as error:
-        console.print(f"[bold red]Error:[/bold red] {error}")
+        error_console.print(f"[bold red]Error:[/bold red] {error}")
         raise typer.Exit(code=1)
 
     console.print("[bold green]Claude pre-tool hook recorded.[/bold green]")
@@ -459,7 +459,7 @@ def hook_post_tool() -> None:
         require_initialized()
         raw_path = handle_post_tool()
     except (RuntimeError, HookPayloadError) as error:
-        console.print(f"[bold red]Error:[/bold red] {error}")
+        error_console.print(f"[bold red]Error:[/bold red] {error}")
         raise typer.Exit(code=1)
 
     console.print("[bold green]Claude post-tool hook recorded.[/bold green]")
@@ -475,7 +475,7 @@ def hook_stop() -> None:
         require_initialized()
         raw_path = handle_stop()
     except (RuntimeError, HookPayloadError) as error:
-        console.print(f"[bold red]Error:[/bold red] {error}")
+        error_console.print(f"[bold red]Error:[/bold red] {error}")
         raise typer.Exit(code=1)
 
     console.print("[bold green]Claude stop hook recorded.[/bold green]")
